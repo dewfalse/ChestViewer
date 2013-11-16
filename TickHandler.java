@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL12;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
@@ -78,14 +79,18 @@ public class TickHandler implements ITickHandler {
 	}
 
 	private void render(ItemStack[] itemStacks) {
+		Minecraft mc = Minecraft.getMinecraft();
+		ScaledResolution scaledresolution = new ScaledResolution(
+				mc.gameSettings, mc.displayWidth, mc.displayHeight);
+		int width = scaledresolution.getScaledWidth();
+		int height = scaledresolution.getScaledHeight();
 		for(int i = 0; i < itemStacks.length; ++i) {
 			if(itemStacks[i] == null) {
 				continue;
 			}
-			Minecraft mc = Minecraft.getMinecraft();
-
-			drawItemStack(itemStacks[i], (i % 9) * 18, (i / 9) * 18);
-			RenderPlayer ri = new RenderPlayer();
+			int w = (int) (((i % 9) - 4.5) * 18);
+			int h = (int) ((i / 9 - (itemStacks.length / 9 / 2.0)) * 18);
+			drawItemStack(itemStacks[i], width / 2 + w, height / 2 + h);
 		}
 
 	}
