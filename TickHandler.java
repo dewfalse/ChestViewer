@@ -51,6 +51,10 @@ public class TickHandler implements ITickHandler {
 			return;
 		}
 
+		if(mc.theWorld == null) {
+			return;
+		}
+
 		if(mc.objectMouseOver == null) {
 			return;
 		}
