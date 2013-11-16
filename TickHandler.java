@@ -84,28 +84,6 @@ public class TickHandler implements ITickHandler {
 				if(mc.currentScreen == null && mc.ingameGUI.getChatGUI().getChatOpen() == false) {
 					render(itemStacks);
 				}
-				if(mc.currentScreen == null)
-				{
-					int var2 = 9;
-					ScaledResolution sr = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight);
-					int var4 = sr.getScaledWidth();
-					int var5 = sr.getScaledHeight();
-					int var6 = itemStacks.length;
-					int var7 = var6 / var2;
-					int var8 = var2 * 18 - 2 + 16;
-					int var9 = (var7 + 4) * 18 - 2 + 44;
-					int var10 = (var4 - var8) / 2;
-					int var11 = (var5 - var9) / 2;
-					GL11.glPushMatrix();
-					GL11.glTranslatef((float)(var10 + 8), (float)(var11 + 18), 0.0F);
-					RenderHelper.enableGUIStandardItemLighting();
-					GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-					this.renderBoxes(var2, 3);
-					GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-					RenderHelper.disableStandardItemLighting();
-					GL11.glPopMatrix();
-				}
-
 			}
 		}
 
@@ -125,6 +103,22 @@ public class TickHandler implements ITickHandler {
 			int h = (int) ((i / 9 - (itemStacks.length / 9 / 2.0)) * 18);
 			drawItemStack(itemStacks[i], width / 2 + w, height / 2 + h);
 		}
+
+		int columnNum = 9;
+		int rowNum = itemStacks.length / 9;
+		int var8 = columnNum * 18 + 16;
+		int var9 = (rowNum + 1) * 18;
+		int var10 = (width - var8) / 2;
+		int var11 = (height - (rowNum + 2) * 18) / 2;
+
+		GL11.glPushMatrix();
+		GL11.glTranslatef((float)(var10 + 8), (float)(var11 + 18), 0.0F);
+		RenderHelper.enableGUIStandardItemLighting();
+		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+		this.renderBoxes(columnNum, itemStacks.length / columnNum);
+		GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+		RenderHelper.disableStandardItemLighting();
+		GL11.glPopMatrix();
 
 	}
 
