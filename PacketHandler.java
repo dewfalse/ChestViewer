@@ -69,7 +69,7 @@ public class PacketHandler implements IPacketHandler {
 						}
 					}
 
-					sendPacket(manager, x, y, z, itemStacks);
+					sendPacket(manager, player, x, y, z, itemStacks);
 				}
 			}
 			else if(command.equals("RESPONSE")) {
@@ -99,7 +99,7 @@ public class PacketHandler implements IPacketHandler {
 		}
 	}
 
-	private void sendPacket(INetworkManager manager, int x, int y, int z, ItemStack[] itemStacks) {
+	private void sendPacket(INetworkManager manager, Player player, int x, int y, int z, ItemStack[] itemStacks) {
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		DataOutputStream stream = new DataOutputStream(bytes);
 		try {
@@ -117,8 +117,9 @@ public class PacketHandler implements IPacketHandler {
 			packet.channel = ChestViewer.modid;
 			packet.data = bytes.toByteArray();
 			packet.length = packet.data.length;
-			Minecraft mc = Minecraft.getMinecraft();
-			mc.thePlayer.sendQueue.addToSendQueue(packet);
+
+			manager.addToSendQueue(packet);
+			//ChestViewer.proxy.sendToPlayer(packet, player);
 		}
 		catch(IOException e) {
 			e.printStackTrace();
