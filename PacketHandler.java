@@ -47,9 +47,26 @@ public class PacketHandler implements IPacketHandler {
 
 				if(tileEntity instanceof TileEntityChest) {
 					TileEntityChest chest = (TileEntityChest)tileEntity;
-					ItemStack[] itemStacks = new ItemStack[chest.getSizeInventory()];
-					for(int i = 0; i < itemStacks.length; ++i) {
-						itemStacks[i] = chest.getStackInSlot(i);
+					TileEntityChest[] chests = {chest.adjacentChestXNeg, chest.adjacentChestZNeg, chest, chest.adjacentChestXPos, chest.adjacentChestZPosition};
+
+					int invSize = 0;
+					for(TileEntityChest c : chests) {
+						if(c == null) {
+							continue;
+						}
+						invSize += c.getSizeInventory();
+					}
+					ItemStack[] itemStacks = new ItemStack[invSize];
+
+					int index = 0;
+					for(TileEntityChest c : chests) {
+						if(c == null) {
+							continue;
+						}
+
+						for(int i = 0; i < c.getSizeInventory(); ++i) {
+							itemStacks[index++] = c.getStackInSlot(i);
+						}
 					}
 
 					sendPacket(manager, x, y, z, itemStacks);
