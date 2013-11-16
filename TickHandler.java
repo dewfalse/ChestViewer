@@ -79,6 +79,10 @@ public class TickHandler implements ITickHandler {
 				return;
 			}
 
+			if(ChestViewer.instance.enabled == false) {
+				return;
+			}
+
 			ItemStack[] itemStacks = ChestViewer.instance.chestMap.get(new PathPoint(x, y, z));
 			if(itemStacks != null) {
 				if(mc.currentScreen == null && mc.ingameGUI.getChatGUI().getChatOpen() == false) {

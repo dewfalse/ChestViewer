@@ -26,6 +26,8 @@ public class ChestViewer {
 
 	Map<PathPoint, ItemStack[]> chestMap = new LinkedHashMap();
 
+	public boolean enabled = true;
+
 	@Instance("ChestViewer")
 	public static ChestViewer instance;
 
