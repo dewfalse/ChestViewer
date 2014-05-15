@@ -1,36 +1,29 @@
 package chestviewer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.ShortBuffer;
-import java.util.EnumSet;
-
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.Packet250CustomPayload;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.util.EnumMovingObjectType;
-
+import net.minecraft.util.MovingObjectPosition;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import cpw.mods.fml.common.ITickHandler;
-import cpw.mods.fml.common.TickType;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ShortBuffer;
+import java.util.EnumSet;
 
-public class TickHandler implements ITickHandler {
+public class TickHandler {
 	protected static RenderItem itemRenderer = new RenderItem();
 
 	private static ShortBuffer slotVertex;
@@ -39,13 +32,8 @@ public class TickHandler implements ITickHandler {
 		slotVertex = getBoxVertexBuffer(16, 16);
 	}
 
-	@Override
-	public void tickStart(EnumSet<TickType> type, Object... tickData) {
-
-	}
-
-	@Override
-	public void tickEnd(EnumSet<TickType> type, Object... tickData) {
+    @SubscribeEvent
+    public void tickEnd(TickEvent.RenderTickEvent event) {
 		Minecraft mc = Minecraft.getMinecraft();
 		if(mc == null) {
 			return;
@@ -59,19 +47,19 @@ public class TickHandler implements ITickHandler {
 			return;
 		}
 
-		if(mc.objectMouseOver.typeOfHit == EnumMovingObjectType.TILE) {
+		if(mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
 			int x = mc.objectMouseOver.blockX;
 			int y = mc.objectMouseOver.blockY;
 			int z = mc.objectMouseOver.blockZ;
-			TileEntity tileEntity = mc.theWorld.getBlockTileEntity(x, y, z);
+			TileEntity tileEntity = mc.theWorld.getTileEntity(x, y, z);
 			if(tileEntity == null) {
 				return;
 			}
 			if(tileEntity instanceof TileEntityChest) {
 				sendPacket(x, y, z);
 			}
-			int blockID = mc.theWorld.getBlockId(x, y, z);
-			if(blockID != Block.chest.blockID) {
+			Block block = mc.theWorld.getBlock(x, y, z);
+			if(block != Block.getBlockFromName("chest")) {
 				return;
 			}
 
@@ -120,7 +108,7 @@ public class TickHandler implements ITickHandler {
 		int var11 = (height - (rowNum + 2) * 18) / 2;
 
 		GL11.glPushMatrix();
-		GL11.glTranslatef((float)(var10 + 8), (float)(var11 + 18), 0.0F);
+		GL11.glTranslatef(var10 + 8, var11 + 18, 0.0F);
 		RenderHelper.enableGUIStandardItemLighting();
 		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 		this.renderBoxes(columnNum, itemStacks.length / columnNum);
@@ -136,14 +124,14 @@ public class TickHandler implements ITickHandler {
 		RenderHelper.disableStandardItemLighting();
 		GL11.glDisable(GL11.GL_LIGHTING);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glPushMatrix();
 		GL11.glTranslatef(0.0F, 0.0F, 32.0F);
 		RenderHelper.enableGUIStandardItemLighting();
-		GL11.glPushMatrix();
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glEnable(GL12.GL_RESCALE_NORMAL);
 		short short1 = 240;
 		short short2 = 240;
-		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) short1 / 1.0F, (float) short2 / 1.0F);
+		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, short1 / 1.0F, short2 / 1.0F);
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		GL11.glEnable(GL11.GL_LIGHTING);
 		itemRenderer.zLevel = 200.0F;
@@ -157,33 +145,7 @@ public class TickHandler implements ITickHandler {
 	}
 
 	private void sendPacket(int x, int y, int z) {
-		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-		DataOutputStream stream = new DataOutputStream(bytes);
-		try {
-			stream.writeUTF("REQUEST");
-			stream.writeInt(x);
-			stream.writeInt(y);
-			stream.writeInt(z);
-
-			Packet250CustomPayload packet = new Packet250CustomPayload();
-			packet.channel = ChestViewer.modid;
-			packet.data = bytes.toByteArray();
-			packet.length = packet.data.length;
-			Minecraft mc = Minecraft.getMinecraft();
-			mc.thePlayer.sendQueue.addToSendQueue(packet);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public EnumSet<TickType> ticks() {
-		return EnumSet.of(TickType.RENDER);
-	}
-
-	@Override
-	public String getLabel() {
-		return null;
+        ChestViewer.packetPipeline.sendPacketToServer(new PacketHandler(EnumCommand.REQUEST, x, y, z, null));
 	}
 
 	private static void renderBoxes(int[] ... var0)
@@ -223,7 +185,7 @@ public class TickHandler implements ITickHandler {
 	private static void renderBox(ShortBuffer var0, int var1, int var2)
 	{
 		GL11.glPushMatrix();
-		GL11.glTranslatef((float)var1, (float)var2, 0.0F);
+		GL11.glTranslatef(var1, var2, 0.0F);
 		GL11.glLineWidth(1.0F);
 		GL11.glColor4f(0.5F, 1.0F, 1.0F, 1.0F);
 		GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);

@@ -1,46 +1,30 @@
 package chestviewer;
 
-import java.util.EnumSet;
-
+import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.InputEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.util.ChatComponentTranslation;
 import org.lwjgl.input.Keyboard;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
-import cpw.mods.fml.client.registry.KeyBindingRegistry.KeyHandler;
-import cpw.mods.fml.common.TickType;
+public class ChestViewerKeyHandler {
 
-public class ChestViewerKeyHandler extends KeyHandler {
-
-	static KeyBinding toggleKeyBinding = new KeyBinding(ChestViewer.modid, Keyboard.KEY_P);
+	static KeyBinding toggleKeyBinding = new KeyBinding(ChestViewer.modid, Keyboard.KEY_P, ChestViewer.modid);
 
 	public ChestViewerKeyHandler() {
-		super(new KeyBinding[] {toggleKeyBinding}, new boolean[] {true});
+        ClientRegistry.registerKeyBinding(toggleKeyBinding);
 	}
-
-	@Override
-	public String getLabel() {
-		return null;
-	}
-
-	@Override
-	public void keyDown(EnumSet<TickType> types, KeyBinding kb,
-			boolean tickEnd, boolean isRepeat) {
-	}
-
-	@Override
-	public void keyUp(EnumSet<TickType> types, KeyBinding kb, boolean tickEnd) {
-		if(tickEnd) {
-			Minecraft mc = Minecraft.getMinecraft();
-			if(mc.currentScreen == null && mc.ingameGUI.getChatGUI().getChatOpen() == false) {
-				ChestViewer.instance.enabled = !ChestViewer.instance.enabled;
-				mc.thePlayer.addChatMessage("ChestViewer: " + (ChestViewer.instance.enabled ? "ON" : "OFF"));
-			}
-		}
-	}
-
-	@Override
-	public EnumSet<TickType> ticks() {
-		return EnumSet.of(TickType.RENDER);
+    @SubscribeEvent
+    public void KeyInputEvent(InputEvent.KeyInputEvent event) {
+        if (!FMLClientHandler.instance().isGUIOpen(GuiChat.class)) {
+            if(toggleKeyBinding.isPressed()) {
+                ChestViewer.instance.enabled = !ChestViewer.instance.enabled;
+                Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new ChatComponentTranslation("ChestViewer: " + (ChestViewer.instance.enabled ? "ON" : "OFF")));
+            }
+        }
 	}
 
 }
